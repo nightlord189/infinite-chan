@@ -42,6 +42,12 @@ func (c *Chan) Out() chan interface{} {
 	return c.out
 }
 
+func (c *Chan) Len() int {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	return len(c.buf)
+}
+
 func (c *Chan) processInput() {
 	for inVal := range c.in {
 		c.lock.Lock()
