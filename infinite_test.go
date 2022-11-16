@@ -15,10 +15,7 @@ func BenchmarkInfiniteChannel(b *testing.B) {
 	allcount := inputCount
 	go func() {
 		for i := 0; i < allcount; i++ {
-			go func(val int) {
-				ch.In() <- val
-				//fmt.Println("write", val)
-			}(i)
+			ch.In() <- i
 		}
 		fmt.Println("infinite goroutines_count", runtime.NumGoroutine())
 	}()
