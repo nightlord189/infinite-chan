@@ -97,7 +97,7 @@ func (c *Chan) processOutput() {
 	var outVal interface{}
 	for {
 		c.lock.Lock()
-		if c.closed && c.head >= c.tail {
+		if c.closed && c.head > c.tail {
 			c.lock.Unlock()
 			break
 		}
