@@ -11,7 +11,7 @@ import (
 const inputCount = 10000
 
 func BenchmarkInfiniteChannel(b *testing.B) {
-	ch := infinite.NewChan()
+	ch := infinite.NewChan[int]()
 	allcount := inputCount
 	go func() {
 		for i := 0; i < allcount; i++ {
@@ -26,7 +26,7 @@ func BenchmarkInfiniteChannel(b *testing.B) {
 		count++
 		time.Sleep(1 * time.Millisecond)
 
-		resultMap[i.(int)] = true
+		resultMap[i] = true
 
 		if count == allcount {
 			close(ch.In())

@@ -33,10 +33,10 @@ import (
 
 func main () {
 	val := 1
-	ch := infinite.NewChan()
+	ch := infinite.NewChan[int]()
 	ch.In() <- val
 	value := <- ch.Out()
-	fmt.Println(value.(int))
+	fmt.Println(value)
 
 	close (ch.In())
 }

@@ -8,24 +8,24 @@ import (
 const maxBufferSize = math.MaxInt
 const halfBufferSize = math.MaxInt / 2
 
-type Chan struct {
-	in, out chan interface{}
+type Chan[T any] struct {
+	in, out chan T
 	signal  chan bool
 	head    int
 	tail    int
-	buf     map[int]interface{}
+	buf     map[int]T
 	lock    *sync.Mutex
 	closed  bool
 }
 
-func NewChan() *Chan {
-	result := &Chan{
-		in:     make(chan interface{}),
-		out:    make(chan interface{}),
+func NewChan[T any]() *Chan[T] {
+	result := &Chan[T]{
+		in:     make(chan T),
+		out:    make(chan T),
 		signal: make(chan bool, 1),
 		head:   -1,
 		tail:   -1,
-		buf:    make(map[int]interface{}),
+		buf:    make(map[int]T),
 		lock:   &sync.Mutex{},
 		closed: false,
 	}
@@ -34,21 +34,25 @@ func NewChan() *Chan {
 	return result
 }
 
-func (c *Chan) In() chan interface{} {
+func (c *Chan[T]) In() chan T {
 	return c.in
 }
 
-func (c *Chan) Out() chan interface{} {
+func (c *Chan[T]) Out() chan T {
 	return c.out
 }
 
-func (c *Chan) Len() int {
+func (c *Chan[T]) Len() int {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	return len(c.buf)
 }
 
-func (c *Chan) processInput() {
+func (c *Chan[T]) Close() {
+	close(c.in)
+}
+
+func (c *Chan[T]) processInput() {
 	for inVal := range c.in {
 		c.lock.Lock()
 		// increase index of last element
@@ -71,7 +75,7 @@ func (c *Chan) processInput() {
 	c.signal <- true
 }
 
-func (c *Chan) addToBuffer(val interface{}) {
+func (c *Chan[T]) addToBuffer(val T) {
 	c.buf[c.tail] = val
 	if c.tail == maxBufferSize && c.head > halfBufferSize {
 		c.resize()
@@ -80,10 +84,10 @@ func (c *Chan) addToBuffer(val interface{}) {
 
 // someday tail index can be closer to maxInt
 // in that case we will create new buffer map, reduce head and tail both and move all elements to new buffer
-func (c *Chan) resize() {
+func (c *Chan[T]) resize() {
 	//fmt.Printf("resize started: head %d, tail %d, buf %d\n", c.head, c.end, len(c.buf))
 	offset := c.head
-	newBuf := make(map[int]interface{}, len(c.buf))
+	newBuf := make(map[int]T, len(c.buf))
 	for i := 0; i <= c.tail-offset; i++ {
 		newBuf[i] = c.buf[i+offset]
 	}
@@ -93,8 +97,8 @@ func (c *Chan) resize() {
 	//fmt.Printf("resize finished: head %d, tail %d, buf %d\n", c.head, c.end, len(c.buf))
 }
 
-func (c *Chan) processOutput() {
-	var outVal interface{}
+func (c *Chan[T]) processOutput() {
+	var outVal T
 	for {
 		c.lock.Lock()
 		if c.closed && c.head > c.tail {
