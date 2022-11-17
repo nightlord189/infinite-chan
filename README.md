@@ -20,7 +20,7 @@ Go struct for implement Go channel concept with infinite buffer.
 ## Getting started
 
 ```
-go get github.com/nightlord189/infinite-chan
+go get github.com/nightlord189/infinite-chan@v1.1.0
 ```
 
 ```go
