@@ -16,6 +16,7 @@ Go struct for implement Go channel concept with infinite buffer.
 
 ## Tips
 + to close all channel, close .In() channel
++ because map in Go are never shrinking even if all keys are deleted (see [article](https://teivah.medium.com/maps-and-memory-leaks-in-go-a85ebe6e7e69)), so if your channel is alive too long, you should periodically call Resize() to prevent memory leaks
 
 ## Getting started
 

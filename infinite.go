@@ -78,13 +78,14 @@ func (c *Chan[T]) processInput() {
 func (c *Chan[T]) addToBuffer(val T) {
 	c.buf[c.tail] = val
 	if c.tail == maxBufferSize && c.head > halfBufferSize {
-		c.resize()
+		c.Resize()
 	}
 }
 
+// Resize - resizes channel index, copies all values to new map to free memory and prevent memory leaks
 // someday tail index can be closer to maxInt
 // in that case we will create new buffer map, reduce head and tail both and move all elements to new buffer
-func (c *Chan[T]) resize() {
+func (c *Chan[T]) Resize() {
 	//fmt.Printf("resize started: head %d, tail %d, buf %d\n", c.head, c.end, len(c.buf))
 	offset := c.head
 	newBuf := make(map[int]T, len(c.buf))
