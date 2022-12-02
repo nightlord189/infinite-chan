@@ -52,6 +52,29 @@ func (c *Chan[T]) Close() {
 	close(c.in)
 }
 
+// Head - returns current head index, for example, to analyze do you need resize chan now
+func (c *Chan[T]) Head() int {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	return c.head
+}
+
+// Resize - resizes channel index, copies all values to new map to free memory, prevent memory leaks and reduce indexes
+func (c *Chan[T]) Resize() {
+	// someday tail index can be closer to maxInt
+	// in that case we will create new buffer map, reduce head and tail both and move all elements to new buffer
+	//fmt.Printf("resize started: head %d, tail %d, buf %d\n", c.head, c.end, len(c.buf))
+	offset := c.head
+	newBuf := make(map[int]T, len(c.buf))
+	for i := 0; i <= c.tail-offset; i++ {
+		newBuf[i] = c.buf[i+offset]
+	}
+	c.head = 0
+	c.tail -= offset
+	c.buf = newBuf
+	//fmt.Printf("resize finished: head %d, tail %d, buf %d\n", c.head, c.end, len(c.buf))
+}
+
 func (c *Chan[T]) processInput() {
 	for inVal := range c.in {
 		c.lock.Lock()
@@ -80,22 +103,6 @@ func (c *Chan[T]) addToBuffer(val T) {
 	if c.tail == maxBufferSize && c.head > halfBufferSize {
 		c.Resize()
 	}
-}
-
-// Resize - resizes channel index, copies all values to new map to free memory and prevent memory leaks
-// someday tail index can be closer to maxInt
-// in that case we will create new buffer map, reduce head and tail both and move all elements to new buffer
-func (c *Chan[T]) Resize() {
-	//fmt.Printf("resize started: head %d, tail %d, buf %d\n", c.head, c.end, len(c.buf))
-	offset := c.head
-	newBuf := make(map[int]T, len(c.buf))
-	for i := 0; i <= c.tail-offset; i++ {
-		newBuf[i] = c.buf[i+offset]
-	}
-	c.head = 0
-	c.tail -= offset
-	c.buf = newBuf
-	//fmt.Printf("resize finished: head %d, tail %d, buf %d\n", c.head, c.end, len(c.buf))
 }
 
 func (c *Chan[T]) processOutput() {
